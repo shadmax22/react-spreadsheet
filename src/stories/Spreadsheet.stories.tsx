@@ -70,7 +70,9 @@ const meta: Meta<Props<StringCell>> = {
 export default meta;
 
 export const Basic: StoryObj = {
-  args: {},
+  args: {
+    activeKey: [1, 2],
+  },
 };
 
 export const DarkMode: StoryObj = {
@@ -202,16 +204,21 @@ export const RangeCell: StoryObj = {
 export const WithSelectCell: StoryObj = {
   args: {
     ...meta.args,
-    data: Matrix.set(
-      { row: 2, column: 2 },
-      {
-        value: undefined,
-        DataViewer: SelectView,
-        DataEditor: SelectEdit,
-        className: "select-cell",
-      },
-      createEmptyMatrix<StringCell>(INITIAL_ROWS, INITIAL_COLUMNS)
-    ),
+    // data: Matrix.set(
+    //   { row: 2, column: 2 },
+    //   {
+    //     value: undefined,
+    //     DataViewer: SelectView,
+    //     DataEditor: SelectEdit,
+    //     className: "select-cell",
+    //   },
+    //   createEmptyMatrix<StringCell>(INITIAL_ROWS, INITIAL_COLUMNS)
+    // ),
+
+    data: [
+      [{ value: 1 }, { value: 1 }, { value: 1 }],
+      [{ value: 1 }, { value: 1 }, { value: 1 }],
+    ],
   },
 };
 
@@ -240,32 +247,32 @@ export const Filter: StoryFn<Props<StringCell>> = (props) => {
    * Removes cells not matching the filter from matrix while maintaining the
    * minimum size that includes all of the matching cells.
    */
-  const filtered = React.useMemo(() => {
-    if (filter.length === 0) {
-      return data;
-    }
-    const filtered: Matrix.Matrix<StringCell> = [];
-    for (let row = 0; row < data.length; row++) {
-      if (data.length !== 0) {
-        for (let column = 0; column < data[0].length; column++) {
-          const cell = data[row][column];
-          if (cell && cell.value && cell.value.includes(filter)) {
-            if (!filtered[0]) {
-              filtered[0] = [];
-            }
-            if (filtered[0].length < column) {
-              filtered[0].length = column + 1;
-            }
-            if (!filtered[row]) {
-              filtered[row] = [];
-            }
-            filtered[row][column] = cell;
-          }
-        }
-      }
-    }
-    return filtered;
-  }, [data, filter]);
+  // const filtered = React.useMemo(() => {
+  //   if (filter.length === 0) {
+  //     return data;
+  //   }
+  //   const filtered: Matrix.Matrix<StringCell> = [];
+  //   for (let row = 0; row < data.length; row++) {
+  //     if (data.length !== 0) {
+  //       for (let column = 0; column < data[0].length; column++) {
+  //         const cell = data[row][column];
+  //         if (cell && cell.value && cell.value.includes(filter)) {
+  //           if (!filtered[0]) {
+  //             filtered[0] = [];
+  //           }
+  //           if (filtered[0].length < column) {
+  //             filtered[0].length = column + 1;
+  //           }
+  //           if (!filtered[row]) {
+  //             filtered[row] = [];
+  //           }
+  //           filtered[row][column] = cell;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return filtered;
+  // }, [data, filter]);
 
   return (
     <>
@@ -277,7 +284,11 @@ export const Filter: StoryFn<Props<StringCell>> = (props) => {
           onChange={handleFilterChange}
         />
       </div>
-      <Spreadsheet {...props} data={filtered} onChange={setData} />
+      <Spreadsheet
+        {...props}
+        activeKey={{ row: 1, col: Number(filter), acitve: true }}
+        onChange={setData}
+      />
     </>
   );
 };
@@ -311,7 +322,15 @@ export const ControlledSelection: StoryFn<Props<StringCell>> = (props) => {
           Select entire worksheet
         </button>
       </div>
-      <Spreadsheet {...props} selected={selected} onSelect={handleSelect} />;
+      <Spreadsheet
+        {...props}
+        selected={selected}
+        onModeChange={(e, y) => {
+          console.log(y);
+        }}
+        onSelect={handleSelect}
+      />
+      ;
     </div>
   );
 };

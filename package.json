@@ -1,8 +1,11 @@
 {
-  "name": "react-spreadsheet",
-  "version": "0.9.4",
+  "name": "@mdshad/react-spreadsheet",
+  "version": "0.0.9",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Simple, customizable yet performant spreadsheet for React",
-  "author": "Iddan Aaronsohn <mail@aniddan.com> (https://aniddan.com)",
+  "author": "Forked by Md Shad, Iddan Aaronsohn <mail@aniddan.com> (https://aniddan.com)",
   "keywords": [
     "spreadsheet",
     "excel",
@@ -112,11 +115,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iddan/react-spreadsheet.git"
+    "url": "git+https://github.com/shadmax22/react-spreadsheet.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/iddan/react-spreadsheet/issues"
+    "url": "https://github.com/shadmax22/react-spreadsheet/issues"
   },
-  "homepage": "https://github.com/iddan/react-spreadsheet#readme"
+  "homepage": "https://github.com/shadmax22/react-spreadsheet#readme"
 }

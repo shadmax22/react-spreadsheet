@@ -5,7 +5,11 @@ import * as Actions from "./actions";
 import * as Matrix from "./matrix";
 import * as Point from "./point";
 import { Selection } from "./selection";
-import reducer, { INITIAL_STATE, hasKeyDownHandler } from "./reducer";
+import reducer, {
+  INITIAL_STATE,
+  activeCellByCordinates,
+  hasKeyDownHandler,
+} from "./reducer";
 import context from "./context";
 import { Model, createFormulaParser } from "./engine";
 import {
@@ -103,11 +107,25 @@ export type Props<CellType extends Types.CellBase> = {
   DataEditor?: Types.DataEditorComponent<CellType>;
   // Handlers
   /** Callback called on key down inside the spreadsheet. */
-  onKeyDown?: (event: React.KeyboardEvent) => void;
+  onKeyDown?: (
+    event: React.KeyboardEvent,
+    mode: Types.Mode,
+    prevActive: { row: number; column: number },
+    currentActive: { row: number; column: number },
+    state: Matrix.Matrix<CellType>
+  ) => void;
   /** Callback called when the Spreadsheet's data changes. */
-  onChange?: (data: Matrix.Matrix<CellType>) => void;
+  onChange?: (
+    data: Matrix.Matrix<CellType>,
+    key: { row: number; column: number }
+  ) => void;
   /** Callback called when the Spreadsheet's edit mode changes. */
-  onModeChange?: (mode: Types.Mode) => void;
+  onModeChange?: (
+    mode: Types.Mode,
+    prevActive: { row: number; column: number },
+    currentActive: { row: number; column: number },
+    state: Matrix.Matrix<CellType>
+  ) => void;
   /** Callback called when the Spreadsheet's selection changes. */
   onSelect?: (selected: Selection) => void;
   /** Callback called when Spreadsheet's active cell changes. */
@@ -121,6 +139,7 @@ export type Props<CellType extends Types.CellBase> = {
   ) => void;
   /** Callback called when the Spreadsheet's evaluated data changes. */
   onEvaluatedDataChange?: (data: Matrix.Matrix<CellType>) => void;
+  activeKey?: { row: number; col: number; acitve?: boolean };
 };
 
 /**
@@ -149,7 +168,9 @@ const Spreadsheet = <CellType extends Types.CellBase>(
     onBlur = () => {},
     onCellCommit = () => {},
     onEvaluatedDataChange = () => {},
+    activeKey = null,
   } = props;
+
   type State = Types.StoreState<CellType>;
 
   const initialState = React.useMemo(() => {
@@ -176,6 +197,11 @@ const Spreadsheet = <CellType extends Types.CellBase>(
   const mode = state.mode;
 
   const rootRef = React.useRef<HTMLDivElement>(null);
+
+  const cellActiveRequest = React.useCallback(
+    (activeKey) => dispatch(Actions.cellActiveRequest(activeKey) as any),
+    [dispatch]
+  );
 
   const copy = React.useCallback(() => dispatch(Actions.copy()), [dispatch]);
   const cut = React.useCallback(() => dispatch(Actions.cut()), [dispatch]);
@@ -238,7 +264,10 @@ const Spreadsheet = <CellType extends Types.CellBase>(
     if (state.model.data !== prevDataRef.current) {
       // Call on change only if the data change internal
       if (state.model.data !== props.data) {
-        onChange(state.model.data);
+        onChange(
+          state.model.data,
+          state?.active as { row: number; column: number }
+        );
       }
     }
 
@@ -273,7 +302,12 @@ const Spreadsheet = <CellType extends Types.CellBase>(
   const prevModeRef = React.useRef<Types.Mode>(state.mode);
   React.useEffect(() => {
     if (state.mode !== prevModeRef.current) {
-      onModeChange(state.mode);
+      onModeChange(
+        state.mode,
+        state?.lastChanged as { row: number; column: number },
+        state?.active as { row: number; column: number },
+        state.model.data
+      );
     }
 
     prevModeRef.current = state.mode;
@@ -290,6 +324,12 @@ const Spreadsheet = <CellType extends Types.CellBase>(
       }
     }
   }, [onCellCommit, state.lastChanged, state.lastCommit]);
+
+  React.useEffect(() => {
+    if (!(activeKey === null)) {
+      cellActiveRequest(activeKey);
+    }
+  }, [activeKey]);
 
   // Update selection when props.selected changes
   const prevSelectedPropRef = React.useRef<Selection | undefined>(
@@ -386,7 +426,13 @@ const Spreadsheet = <CellType extends Types.CellBase>(
     (event: React.KeyboardEvent) => {
       event.persist();
       if (onKeyDown) {
-        onKeyDown(event);
+        onKeyDown(
+          event,
+          state.mode,
+          state?.lastChanged as { row: number; column: number },
+          state?.active as { row: number; column: number },
+          state.model.data
+        );
       }
       // Do not use event in case preventDefault() was called inside onKeyDown
       if (!event.defaultPrevented) {

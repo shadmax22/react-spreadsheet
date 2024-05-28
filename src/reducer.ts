@@ -328,6 +328,15 @@ export default function reducer(
       return { ...state, ...commit(changes) };
     }
 
+    case Actions.CELL_ACTIVE_REQUEST: {
+      const p = action.payload;
+      const handler: any = activeCellByCordinates(p);
+      if (handler) {
+        return { ...state, ...handler(state, event) };
+      }
+      return state;
+    }
+
     default:
       throw new Error("Unknown action");
   }
@@ -402,6 +411,25 @@ function commit(changes: Types.CommitChanges): Partial<Types.StoreState> {
 
 // Utility
 
+export const activeCellByCordinates =
+  ({ row, col, active }: { row: number; col: number; active?: boolean }) =>
+  (state: any) => {
+    const nextActive = {
+      row: row,
+      column: col,
+    };
+
+    if (!Matrix.has(nextActive, state.model.data)) {
+      return { ...state, mode: "view" };
+    }
+    return {
+      ...state,
+      active: nextActive,
+      selected: new RangeSelection(new PointRange(nextActive, nextActive)),
+      mode: active ? "edit" : "view",
+    };
+  };
+
 export const go =
   (rowDelta: number, columnDelta: number): KeyDownHandler =>
   (state) => {
@@ -449,7 +477,7 @@ const keyDownHandlers: KeyDownHandlers = {
 const editKeyDownHandlers: KeyDownHandlers = {
   Escape: view,
   Tab: keyDownHandlers.Tab,
-  Enter: keyDownHandlers.ArrowDown,
+  Enter: keyDownHandlers.ArrowRight,
 };
 
 const editShiftKeyDownHandlers: KeyDownHandlers = {

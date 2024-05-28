@@ -7,6 +7,7 @@ import {
   CreateFormulaParser,
 } from "./types";
 import { Selection } from "./selection";
+import { number } from "prop-types";
 
 export const SET_DATA = "SET_DATA";
 export const SET_CREATE_FORMULA_PARSER = "SET_CREATE_FORMULA_PARSER";
@@ -30,6 +31,7 @@ export const KEY_DOWN = "KEY_DOWN";
 export const DRAG_START = "DRAG_START";
 export const DRAG_END = "DRAG_END";
 export const COMMIT = "COMMIT";
+export const CELL_ACTIVE_REQUEST = "CELL_ACTIVE_REQUEST";
 
 export type BaseAction<T extends string> = {
   type: T;
@@ -215,6 +217,24 @@ export function keyDown(event: React.KeyboardEvent): KeyDownAction {
   };
 }
 
+export type cellActiveRequest = BaseAction<typeof CELL_ACTIVE_REQUEST> & {
+  payload: { row: number; col: number };
+};
+export function cellActiveRequest({
+  row,
+  col,
+  active,
+}: {
+  row?: number;
+  col?: number;
+  active?: boolean;
+}) {
+  return {
+    type: CELL_ACTIVE_REQUEST,
+    payload: { row, col, active },
+  };
+}
+
 export type DragStartAction = BaseAction<typeof DRAG_START>;
 
 export function dragStart(): DragStartAction {
@@ -298,4 +318,5 @@ export type Action =
   | EditAction
   | ViewAction
   | ClearAction
+  | cellActiveRequest
   | BlurAction;
